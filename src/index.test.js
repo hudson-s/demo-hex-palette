@@ -1,6 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { hexToRgb, rgbToHex, complementary, lighten, darken, generatePalette } from './index.js';
+import {
+  hexToRgb, rgbToHex, complementary, lighten, darken,
+  generatePalette, rgbToHsl, hslToRgb, rotateHue, generateTriadicPalette,
+} from './index.js';
 
 describe('hexToRgb', () => {
   it('parses #ff8800', () => {
@@ -29,12 +32,10 @@ describe('complementary', () => {
 
 describe('lighten / darken', () => {
   it('lighten moves toward white', () => {
-    const result = lighten('#000000', 0.5);
-    assert.strictEqual(result, '#808080');
+    assert.strictEqual(lighten('#000000', 0.5), '#808080');
   });
   it('darken moves toward black', () => {
-    const result = darken('#ffffff', 0.5);
-    assert.strictEqual(result, '#808080');
+    assert.strictEqual(darken('#ffffff', 0.5), '#808080');
   });
 });
 
@@ -47,5 +48,80 @@ describe('generatePalette', () => {
     assert.ok(p.dark);
     assert.ok(p.complementary);
     assert.ok(p.accent);
+  });
+});
+
+describe('rgbToHsl / hslToRgb roundtrip', () => {
+  it('roundtrips pure red', () => {
+    const hsl = rgbToHsl({ r: 255, g: 0, b: 0 });
+    assert.ok(Math.abs(hsl.h - 0) < 1 || Math.abs(hsl.h - 360) < 1);
+    assert.ok(Math.abs(hsl.s - 1) < 0.01);
+    assert.ok(Math.abs(hsl.l - 0.5) < 0.01);
+    const back = hslToRgb(hsl);
+    assert.strictEqual(back.r, 255);
+    assert.strictEqual(back.g, 0);
+    assert.strictEqual(back.b, 0);
+  });
+
+  it('roundtrips gray', () => {
+    const hsl = rgbToHsl({ r: 128, g: 128, b: 128 });
+    assert.strictEqual(hsl.s, 0);
+    assert.strictEqual(hslToRgb(hsl).r, 128);
+  });
+});
+
+describe('rotateHue', () => {
+  it('rotate 0 returns same color', () => {
+    assert.strictEqual(rotateHue('#ff0000', 0), '#ff0000');
+  });
+  it('rotate 180 returns complementary', () => {
+    assert.strictEqual(rotateHue('#ff0000', 180), '#00ffff');
+  });
+  it('wraps around 360', () => {
+    assert.strictEqual(rotateHue('#ff0000', 360), '#ff0000');
+  });
+});
+
+describe('generateTriadicPalette', () => {
+  it('returns 5 keys', () => {
+    const p = generateTriadicPalette('#c06b5e');
+    assert.strictEqual(Object.keys(p).length, 5);
+    assert.ok(p.primary);
+    assert.ok(p.secondary);
+    assert.ok(p.tertiary);
+    assert.ok(p.light);
+    assert.ok(p.dark);
+  });
+
+  it('primary matches input', () => {
+    const p = generateTriadicPalette('#c06b5e');
+    assert.strictEqual(p.primary, '#c06b5e');
+  });
+
+  it('three colors are all different', () => {
+    const p = generateTriadicPalette('#c06b5e');
+    assert.notStrictEqual(p.primary, p.secondary);
+    assert.notStrictEqual(p.secondary, p.tertiary);
+    assert.notStrictEqual(p.primary, p.tertiary);
+  });
+
+  it('secondary is 120° from primary', () => {
+    const p = generateTriadicPalette('#ff0000');
+    assert.strictEqual(p.secondary, '#00ff00');
+  });
+
+  it('tertiary is 240° from primary', () => {
+    const p = generateTriadicPalette('#ff0000');
+    assert.strictEqual(p.tertiary, '#0000ff');
+  });
+
+  it('works with black', () => {
+    const p = generateTriadicPalette('#000000');
+    assert.strictEqual(p.primary, '#000000');
+  });
+
+  it('works with white', () => {
+    const p = generateTriadicPalette('#ffffff');
+    assert.strictEqual(p.primary, '#ffffff');
   });
 });
