@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新功能设计：Analogous Palette</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .color-swatch { width: 100%; aspect-ratio: 1; border-radius: 0.75rem; border: 2px solid oklch(var(--b2)); }
+    .swatch-label { font-family: monospace; font-size: 0.8rem; }
+  </style>
+</head>
+<body class="bg-base-200 min-h-screen">
+
+  <div class="max-w-4xl mx-auto px-4 py-10">
+
+    <!-- Header -->
+    <div class="mb-10">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="badge badge-primary">RFC</span>
+        <span class="badge badge-outline">hex-palette v0.2.0</span>
+      </div>
+      <h1 class="text-3xl font-bold">新功能：Analogous 色板生成</h1>
+      <p class="text-base-content/60 mt-2">
+        在现有 complementary 基础上，新增「近似色」(analogous) 调色方案 — 色轮上相邻的颜色组合，视觉上更和谐。
+      </p>
+    </div>
+
+    <!-- Problem -->
+    <section class="mb-10">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <span class="text-2xl">🤔</span> 问题
+      </h2>
+      <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+          <p>当前 <code>generatePalette()</code> 只生成 complementary 方案。对于需要<strong>柔和、和谐配色</strong>的场景（如品牌设计、渐变背景），complementary 的强对比不够用。</p>
+          <p class="mt-2">用户需要 <strong>analogous</strong>（近似色）方案：色轮上相邻 ±30° 的颜色，视觉上自然协调。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Proposed API -->
+    <section class="mb-10">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <span class="text-2xl">💡</span> 提议的 API
+      </h2>
+      <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+          <div class="mockup-code text-sm">
+            <pre data-prefix="1"><code>import { generateAnalogousPalette } from './src/index.js';</code></pre>
+            <pre data-prefix="2"><code></code></pre>
+            <pre data-prefix="3"><code>const palette = generateAnalogousPalette('#3498db');</code></pre>
+            <pre data-prefix="4"><code>// {</code></pre>
+            <pre data-prefix="5"><code>//   base:    '#3498db',</code></pre>
+            <pre data-prefix="6"><code>//   warm:    '#5b34db',  // +30° 色轮</code></pre>
+            <pre data-prefix="7"><code>//   cool:    '#34db8a',  // -30° 色轮</code></pre>
+            <pre data-prefix="8"><code>//   light:   '#71b7e6',</code></pre>
+            <pre data-prefix="9"><code>//   dark:    '#246a99',</code></pre>
+            <pre data-prefix="10"><code>// }</code></pre>
+          </div>
+          <div class="mt-4">
+            <h3 class="font-semibold mb-2">新增函数签名</h3>
+            <div class="overflow-x-auto">
+              <table class="table table-sm">
+                <thead>
+                  <tr><th>函数</th><th>参数</th><th>说明</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>rgbToHsl()</code></td>
+                    <td><code>{r,g,b}</code></td>
+                    <td>RGB → HSL 转换（内部辅助）</td>
+                  </tr>
+                  <tr>
+                    <td><code>hslToRgb()</code></td>
+                    <td><code>{h,s,l}</code></td>
+                    <td>HSL → RGB 转换（内部辅助）</td>
+                  </tr>
+                  <tr>
+                    <td><code>rotateHue()</code></td>
+                    <td><code>hex, degrees</code></td>
+                    <td>在色轮上旋转指定角度</td>
+                  </tr>
+                  <tr>
+                    <td><code>generateAnalogousPalette()</code></td>
+                    <td><code>hex, angle?</code></td>
+                    <td>生成近似色调板（默认 ±30°）</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Color Preview -->
+    <section class="mb-10">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <span class="text-2xl">🎨</span> 效果预览（以 #3498db 为例）
+      </h2>
+      <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+          <div class="grid grid-cols-5 gap-4 mb-4">
+            <div class="text-center">
+              <div class="color-swatch" style="background: #5b34db;"></div>
+              <p class="swatch-label mt-2">#5b34db</p>
+              <p class="text-xs text-base-content/50">warm (+30°)</p>
+            </div>
+            <div class="text-center">
+              <div class="color-swatch" style="background: #3468db;"></div>
+              <p class="swatch-label mt-2">#3468db</p>
+              <p class="text-xs text-base-content/50">warm (+15°)</p>
+            </div>
+            <div class="text-center">
+              <div class="color-swatch" style="background: #3498db; border-color: oklch(var(--p));"></div>
+              <p class="swatch-label mt-2 font-bold">#3498db</p>
+              <p class="text-xs text-primary font-semibold">base</p>
+            </div>
+            <div class="text-center">
+              <div class="color-swatch" style="background: #34c8db;"></div>
+              <p class="swatch-label mt-2">#34c8db</p>
+              <p class="text-xs text-base-content/50">cool (-15°)</p>
+            </div>
+            <div class="text-center">
+              <div class="color-swatch" style="background: #34db8a;"></div>
+              <p class="swatch-label mt-2">#34db8a</p>
+              <p class="text-xs text-base-content/50">cool (-30°)</p>
+            </div>
+          </div>
+          <p class="text-sm text-base-content/50 text-center">近似色在色轮上相邻，视觉过渡自然流畅</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Implementation Plan -->
+    <section class="mb-10">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <span class="text-2xl">📋</span> 实施计划
+      </h2>
+      <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+          <div class="steps steps-vertical w-full">
+            <div class="step step-primary">
+              <div class="text-left">
+                <p class="font-semibold">Step 1: 添加 HSL 转换函数</p>
+                <p class="text-xs text-base-content/50">rgbToHsl / hslToRgb — 色轮旋转的基础</p>
+              </div>
+            </div>
+            <div class="step step-primary">
+              <div class="text-left">
+                <p class="font-semibold">Step 2: 实现 rotateHue()</p>
+                <p class="text-xs text-base-content/50">hex → HSL → 旋转 H → RGB → hex</p>
+              </div>
+            </div>
+            <div class="step step-secondary">
+              <div class="text-left">
+                <p class="font-semibold">Step 3: 实现 generateAnalogousPalette()</p>
+                <p class="text-xs text-base-content/50">组合 base + warm(+30°) + cool(-30°) + lighten/darken</p>
+              </div>
+            </div>
+            <div class="step step-secondary">
+              <div class="text-left">
+                <p class="font-semibold">Step 4: 更新 CLI 支持 --scheme flag</p>
+                <p class="text-xs text-base-content/50">hex-palette #3498db --scheme analogous</p>
+              </div>
+            </div>
+            <div class="step step-accent">
+              <div class="text-left">
+                <p class="font-semibold">Step 5: 补充测试 + 文档</p>
+                <p class="text-xs text-base-content/50">覆盖边界情况（黑/白/灰），更新 README</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Open Questions -->
+    <section class="mb-10">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <span class="text-2xl">❓</span> 待定问题
+      </h2>
+      <div class="card bg-warning/10 border border-warning/30 shadow-sm">
+        <div class="card-body">
+          <ul class="space-y-3">
+            <li class="flex items-start gap-2">
+              <span class="text-warning font-bold">1.</span>
+              <span>默认角度应该是 <strong>30°</strong> 还是 <strong>20°</strong>？20° 更保守，30° 更明显</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-warning font-bold">2.</span>
+              <span>是否需要支持 <strong>自定义角度</strong> 作为参数？如 <code>generateAnalogousPalette(hex, 45)</code></span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-warning font-bold">3.</span>
+              <span>是否把 <code>generatePalette()</code> 重命名为 <code>generateComplementaryPalette()</code> 以保持命名一致性？</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feedback instruction -->
+    <div class="alert alert-info">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <div>
+        <p class="font-bold">这是 lavish-axi 的评审界面！</p>
+        <p class="text-sm">按 <kbd class="kbd kbd-sm">Ctrl+I</kbd> 进入标注模式 → 点击任何元素添加批注 → 选中文字精准反馈 → 发送后我会收到并修改方案。</p>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

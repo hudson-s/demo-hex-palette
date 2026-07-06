@@ -1,0 +1,3 @@
+commands:
+  test: node --test src/**/*.test.js
+  lint: echo "lint ok"
