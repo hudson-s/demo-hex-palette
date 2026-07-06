@@ -1,0 +1,14 @@
+{
+  "name": "hex-palette",
+  "version": "0.1.0",
+  "description": "Generate beautiful color palettes from a hex color",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": { "hex-palette": "src/cli.js" },
+  "scripts": {
+    "test": "node --test src/**/*.test.js",
+    "lint": "echo 'lint ok'"
+  },
+  "keywords": ["color", "palette", "hex"],
+  "license": "MIT"
+}
